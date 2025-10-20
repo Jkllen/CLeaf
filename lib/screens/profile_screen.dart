@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cleaf/widgets/bottom_nav.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -8,20 +10,14 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: const Color(0xFF017C0F),
-        centerTitle: true,
       ),
-      backgroundColor: Colors.white,
-      body: const Center(
+      body: Center(
         child: Text(
-          'No profile data yet.',
-          style: TextStyle(
-            fontSize: 18,
-            color: Color(0xFF0F4C78),
-            fontWeight: FontWeight.w500,
-          ),
+          "Profile Page (Placeholder)",
+          style: GoogleFonts.inriaSerif(fontSize: 18),
         ),
       ),
+      bottomNavigationBar: const CLeafBottomNav(selectedIndex: 4),
     );
   }
 }

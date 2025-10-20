@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cleaf/widgets/bottom_nav.dart';
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
@@ -8,20 +10,14 @@ class ScheduleScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Schedule'),
-        backgroundColor: const Color(0xFF017C0F),
-        centerTitle: true,
       ),
-      backgroundColor: Colors.white,
-      body: const Center(
+      body: Center(
         child: Text(
-          'No schedules yet.',
-          style: TextStyle(
-            fontSize: 18,
-            color: Color(0xFF0F4C78),
-            fontWeight: FontWeight.w500,
-          ),
+          "Schedule Page (Placeholder)",
+          style: GoogleFonts.inriaSerif(fontSize: 18),
         ),
       ),
+      bottomNavigationBar: const CLeafBottomNav(selectedIndex: 2),
     );
   }
 }

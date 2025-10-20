@@ -1,3 +1,4 @@
+import 'package:cleaf/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cleaf/screens/splash_screen.dart';
 import 'package:cleaf/screens/add_plant_screen.dart';
@@ -33,8 +34,9 @@ class MyApp extends StatelessWidget {
           )
         )
       ),
-      home: const SplashScreen(),
       routes: {
+        '/': (context) => const SplashScreen(),
+        '/home': (context) => const HomeScreen(),
         '/add-plant': (context) => const AddPlantScreen(),
         '/schedule': (context) => const ScheduleScreen(),
         '/library': (context) => const LibraryScreen(),
