@@ -9,9 +9,6 @@ flutter clean
 echo "Getting dependencies..."
 flutter pub get
 
-echo "Building web assets..."
-flutter build web
-
 echo "Generating native splash..."
 dart run flutter_native_splash:create
 
