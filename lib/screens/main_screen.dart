@@ -27,7 +27,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Can't access ModalRoute here; use addPostFrameCallback to read arguments once the widget is mounted
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is int && args >= 0 && args < _screens.length) {

@@ -3,7 +3,6 @@ import 'package:cleaf/widgets/login_widgets.dart';
 import 'package:cleaf/screens/auth/signup_screen.dart';
 import 'package:cleaf/screens/auth/forgot_password_screen.dart';
 import 'package:cleaf/services/auth_service.dart';
-import 'package:cleaf/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
