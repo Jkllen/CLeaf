@@ -25,17 +25,17 @@ class ProfileInfoField extends StatelessWidget {
           Text(label,
               style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: Colors.black54,
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 6),
           TextFormField(
             enabled: isEditing,
             initialValue: value,
             onChanged: onChanged,
-            style: GoogleFonts.poppins(color: Colors.white),
+            style: GoogleFonts.poppins(color: Colors.black),
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFF2A2A2A),
+              fillColor: const Color(0xFFFBFBFB),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               border: OutlineInputBorder(

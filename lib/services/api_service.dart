@@ -8,7 +8,7 @@ class ApiService {
     final url = Uri.parse('$baseUrl/profile');
     print('Requesting profile from: $url');
     print(
-      'Token (first 10 chars): ${token?.substring(0, token.length >= 10 ? 10 : token.length)}',
+      'Token (first 10 chars): ${token.substring(0, token.length >= 10 ? 10 : token.length)}',
     );
 
     try {

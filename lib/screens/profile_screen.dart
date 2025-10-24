@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cleaf/widgets/profile_widgets.dart';
 import 'package:cleaf/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cleaf/screens/auth/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -29,8 +30,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      print('SharedPreferences token: ${token == null ? "null" : "FOUND"}');
-
       if (token == null || token.isEmpty) {
         setState(() {
           _isLoading = false;
@@ -46,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('fetchProfile() exception: $e');
       setState(() {
         _isLoading = false;
         userData = null;
@@ -54,38 +52,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // -------------------- LOGOUT FUNCTION --------------------
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // clear token & username
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF1E1E1E),
+        backgroundColor: Color(0xFFFFFFF),
         body: Center(child: CircularProgressIndicator(color: Colors.green)),
       );
     }
 
     if (userData == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: const Color(0xFFECECEC),
         body: Center(
           child: Text(
             'Failed to load profile.',
-            style: GoogleFonts.poppins(color: Colors.white),
+            style: GoogleFonts.poppins(color: Colors.black),
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFFECECEC),
       appBar: AppBar(
         title: Text(
           'Profile',
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: Colors.black,
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
       ),
@@ -93,74 +102,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${userData!['firstName']} ${userData!['lastName']}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
+            // -------------------- HEADER --------------------
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF68BE68),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${userData!['firstName']} ${userData!['lastName']}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    Text(
-                      userData!['email'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.white70,
+                      Text(
+                        userData!['email'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.white70, 
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isEditing ? Icons.check_circle : Icons.edit,
-                    color: Colors.white,
+                    ],
                   ),
-                  onPressed: () async {
-                    if (_isEditing) {
-                      // Save the changes
-                      final prefs = await SharedPreferences.getInstance();
-                      final token = prefs.getString('token');
-                      if (token != null) {
-                        final result =
-                            await ApiService.updateUserProfile(token, {
-                              'firstName': userData!['firstName'],
-                              'lastName': userData!['lastName'],
-                              'email': userData!['email'],
-                              'username': userData!['username'],
-                            });
+                  IconButton(
+                    icon: Icon(
+                      _isEditing ? Icons.check_circle : Icons.edit,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      if (_isEditing) {
+                        // Save logic remains the same
+                        final prefs = await SharedPreferences.getInstance();
+                        final token = prefs.getString('token');
+                        if (token != null) {
+                          final result =
+                              await ApiService.updateUserProfile(token, {
+                                'firstName': userData!['firstName'],
+                                'lastName': userData!['lastName'],
+                                'email': userData!['email'],
+                                'username': userData!['username'],
+                              });
 
-                        if (result['success'] == true) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Profile updated successfully!'),
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                result['message'] ?? 'Update failed',
+                          if (result['success'] == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Profile updated successfully!'),
                               ),
-                            ),
-                          );
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result['message'] ?? 'Update failed',
+                                ),
+                              ),
+                            );
+                          }
                         }
                       }
-                    }
 
-                    setState(() {
-                      _isEditing = !_isEditing;
-                    });
-                  },
-                ),
-              ],
+                      setState(() {
+                        _isEditing = !_isEditing;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
+
             const SizedBox(height: 20),
 
             // Profile fields
@@ -187,6 +204,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
               value: userData!['username'],
               isEditing: _isEditing,
               onChanged: (val) => userData!['username'] = val,
+            ),
+
+            const SizedBox(height: 40),
+
+            // -------------------- LOGOUT BUTTON --------------------
+            GestureDetector(
+              onTap: logout,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                width: 120,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF31FFB7),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0D0601B4),
+                      offset: Offset(0, 2),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'Log Out',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
