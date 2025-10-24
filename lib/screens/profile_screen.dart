@@ -78,9 +78,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
-        title: Text('Profile',
-            style: GoogleFonts.poppins(
-                color: Colors.white, fontWeight: FontWeight.w600)),
+        title: Text(
+          'Profile',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -118,7 +122,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _isEditing ? Icons.check_circle : Icons.edit,
                     color: Colors.white,
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    if (_isEditing) {
+                      // Save the changes
+                      final prefs = await SharedPreferences.getInstance();
+                      final token = prefs.getString('token');
+                      if (token != null) {
+                        final result =
+                            await ApiService.updateUserProfile(token, {
+                              'firstName': userData!['firstName'],
+                              'lastName': userData!['lastName'],
+                              'email': userData!['email'],
+                              'username': userData!['username'],
+                            });
+
+                        if (result['success'] == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Profile updated successfully!'),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                result['message'] ?? 'Update failed',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    }
+
                     setState(() {
                       _isEditing = !_isEditing;
                     });

@@ -5,14 +5,12 @@ class ApiService {
   static const String baseUrl = 'https://cleaf-backend.onrender.com/api/auth';
 
   static Future<Map<String, dynamic>?> getUserProfile(String token) async {
-    final url = Uri.parse(
-      '$baseUrl/profile',
-    ); 
+    final url = Uri.parse('$baseUrl/profile');
     print('Requesting profile from: $url');
     print(
       'Token (first 10 chars): ${token?.substring(0, token.length >= 10 ? 10 : token.length)}',
     );
-    
+
     try {
       final response = await http.get(
         url,
@@ -34,6 +32,34 @@ class ApiService {
     } catch (e) {
       print("Profile API Exception: $e");
       return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateUserProfile(
+    String token,
+    Map<String, dynamic> updatedData,
+  ) async {
+    final url = Uri.parse('$baseUrl/update');
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(updatedData),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print('Update profile failed: ${response.body}');
+        return {'success': false, 'message': 'Failed to update profile'};
+      }
+    } catch (e) {
+      print('Update profile exception: $e');
+      return {'success': false, 'message': 'Exception occurred'};
     }
   }
 }
