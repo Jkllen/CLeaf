@@ -18,6 +18,7 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
   List<Map<String, dynamic>> _predictions = [];
   String? _base64Image;
 
+  /// Pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source);
@@ -31,24 +32,22 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
     }
   }
 
+  /// Detect plant using backend + Roboflow
   Future<void> _detectPlant() async {
     if (_selectedImage == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final result = await PlantRecognizer.recognizePlantFromFile(
-        _selectedImage!,
-      );
+      final result = await PlantRecognizer.recognizePlantFromFile(_selectedImage!);
       print("Raw Roboflow Result: $result");
 
       final outputs = result["outputs"] as List?;
-      if (outputs == null || outputs.isEmpty)
-        throw Exception("No outputs from Roboflow");
+      if (outputs == null || outputs.isEmpty) throw Exception("No outputs from Roboflow");
 
       final firstOutput = outputs[0];
 
-      // Base64 visualization
+      // Extract Base64 visualization if exists
       String? base64Vis;
       try {
         final outputImage = firstOutput["output_image"];
@@ -59,17 +58,21 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
         base64Vis = null;
       }
 
-      // Safely extract predictions with proper type cast
+      // Extract predictions safely
       final predictionsData = firstOutput["predictions"];
       final predictionsList =
           (predictionsData != null && predictionsData["predictions"] != null)
-          ? (predictionsData["predictions"] as List)
-                .map(
-                  (p) => {"class": p["class"], "confidence": p["confidence"]},
-                )
-                .toList()
-                .cast<Map<String, dynamic>>() // ✅ cast here
-          : <Map<String, dynamic>>[];
+              ? (predictionsData["predictions"] as List)
+                  .map(
+                    (p) => {
+                      "class": p["class"],
+                      "confidence": p["confidence"],
+                      "scientificName": p["scientificName"] ?? "",
+                    },
+                  )
+                  .toList()
+                  .cast<Map<String, dynamic>>()
+              : <Map<String, dynamic>>[];
 
       setState(() {
         _base64Image = base64Vis;
@@ -77,12 +80,27 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
       });
     } catch (e) {
       print('Detection error: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to detect plant')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to detect plant')),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  /// Helper to build camera/gallery buttons
+  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.black),
+      label: Text(label, style: const TextStyle(fontSize: 15, color: Colors.black)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
@@ -94,83 +112,105 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recognize Plant')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              if (_selectedImage != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(_selectedImage!, height: 200),
-                ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Image container
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                color: const Color(0xFFEEEEEE),
+                padding: const EdgeInsets.all(16),
+                child: _selectedImage != null
+                    ? Image.file(_selectedImage!, height: 300, fit: BoxFit.cover)
+                    : const Center(
+                        child: Icon(Icons.image, size: 80, color: Colors.grey),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Camera & Gallery buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildActionButton(Icons.camera_alt, "Camera", () => _pickImage(ImageSource.camera)),
+                _buildActionButton(Icons.photo_library, "Gallery", () => _pickImage(ImageSource.gallery)),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Detect button
+            ElevatedButton(
+              onPressed: _isLoading ? null : _detectPlant,
+              child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Detect Plant"),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Divider
+            Container(width: double.infinity, height: 2, color: const Color(0xFFD9D9D9), margin: const EdgeInsets.symmetric(vertical: 20)),
+
+            // Detection visualization
+            if (imageBytes != null)
+              Column(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
+                  const Text(
+                    "Detection Visualization:",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Gallery'),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.memory(imageBytes, height: 250, fit: BoxFit.cover),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _detectPlant,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Detect Plant'),
-              ),
-              const SizedBox(height: 20),
-              if (imageBytes != null)
-                Column(
-                  children: [
-                    const Text(
-                      "Detection Visualization:",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ClipRRect(
+
+            // Predictions list
+            if (_predictions.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _predictions.map((p) {
+                  final confidence = (p["confidence"] * 100).toStringAsFixed(0);
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F7F7),
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.memory(imageBytes, height: 250),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)],
                     ),
-                  ],
-                ),
-              if (_predictions.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Detected Plants:",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    ..._predictions.map(
-                      (p) => ListTile(
-                        leading: const Icon(Icons.local_florist),
-                        title: Text(p["class"]),
-                        subtitle: Text(
-                          "Confidence: ${(p["confidence"] * 100).toStringAsFixed(1)}%",
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.green, size: 26),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            p["class"],
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.green),
+                          ),
                         ),
-                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: const Color(0xFFB1FFC0), borderRadius: BorderRadius.circular(11)),
+                          child: Text(
+                            "$confidence% match",
+                            style: const TextStyle(fontSize: 10, color: Color(0xFF008B17), fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-            ],
-          ),
+                  );
+                }).toList(),
+              ),
+          ],
         ),
       ),
     );

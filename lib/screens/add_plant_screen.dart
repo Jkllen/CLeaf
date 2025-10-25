@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cleaf/widgets/add_plant_widgets.dart';
 import 'package:cleaf/screens/recognize_plant_screen.dart';
 import 'package:cleaf/screens/manual_add_plant_screen.dart';
-import 'package:cleaf/screens/upload_plant_screen.dart';
 
 class AddPlantScreen extends StatelessWidget {
   const AddPlantScreen({super.key});
@@ -66,23 +65,6 @@ class AddPlantScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ManualAddPlantScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // Option 3: Upload from Device
-              PlantOptionCard(
-                color: const Color(0xFFA1A1A1),
-                title: "Upload Image",
-                subtitle: "Select an image from your device",
-                icon: Icons.image_outlined,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UploadPlantScreen(),
                     ),
                   );
                 },

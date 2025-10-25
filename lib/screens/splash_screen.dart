@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cleaf/screens/auth/login_screen.dart'; // Navigate to login screen later
+import 'package:cleaf/screens/auth/login_screen.dart'; 
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

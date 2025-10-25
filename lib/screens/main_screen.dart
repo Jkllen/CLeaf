@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cleaf/screens/home_screen.dart';
-import 'package:cleaf/screens/add_plant_screen.dart';
 import 'package:cleaf/screens/schedule_screen.dart';
 import 'package:cleaf/screens/library_screen.dart';
 import 'package:cleaf/screens/profile_screen.dart';
+import 'package:cleaf/screens/catalog_screen.dart';
 import 'package:cleaf/widgets/bottom_nav.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    AddPlantScreen(),
+    CatalogScreen(),
     ScheduleScreen(),
     LibraryScreen(),
     ProfileScreen(),

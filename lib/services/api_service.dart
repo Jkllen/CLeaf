@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = 'https://cleaf-backend.onrender.com/api/auth';
 
+  // ======= GET USER PROFILE =======
   static Future<Map<String, dynamic>?> getUserProfile(String token) async {
     final url = Uri.parse('$baseUrl/profile');
     print('Requesting profile from: $url');
@@ -34,7 +35,8 @@ class ApiService {
       return null;
     }
   }
-
+  
+  // ======= UPDATE USER PROFILE =======
   static Future<Map<String, dynamic>> updateUserProfile(
     String token,
     Map<String, dynamic> updatedData,

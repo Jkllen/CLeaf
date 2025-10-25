@@ -90,11 +90,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(
           'Profile',
           style: GoogleFonts.poppins(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         elevation: 0,
         centerTitle: true,
       ),
@@ -139,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     onPressed: () async {
                       if (_isEditing) {
-                        // Save logic remains the same
+                        // Save logic
                         final prefs = await SharedPreferences.getInstance();
                         final token = prefs.getString('token');
                         if (token != null) {

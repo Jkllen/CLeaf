@@ -16,15 +16,21 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // === HEADER ===
-              Text(
-                "Home Dashboard",
-                style: GoogleFonts.openSans(
-                  fontSize: 25,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                color: Colors.green,
+                child: Text(
+                  "Home Dashboard",
+                  style: GoogleFonts.openSans(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white, // text color contrasts the background
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
+
               const SizedBox(height: 40),
 
               // === TITLE: Getting Started! ===
@@ -55,7 +61,9 @@ class HomeScreen extends StatelessWidget {
               // === ADD NEW PLANT BUTTON ===
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).pushReplacementNamed('/main', arguments: 1);
+                  Navigator.of(
+                    context,
+                  ).pushReplacementNamed('/main', arguments: 1);
                 },
                 child: Container(
                   width: double.infinity,
@@ -74,7 +82,11 @@ class HomeScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.add_circle, color: Colors.white, size: 26),
+                      const Icon(
+                        Icons.add_circle,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         "Add New Plant",

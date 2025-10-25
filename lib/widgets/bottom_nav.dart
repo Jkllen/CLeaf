@@ -10,7 +10,7 @@ class CLeafBottomNav extends StatelessWidget {
     required this.selectedIndex,
     this.onItemTapped,
   });
-
+ 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
@@ -23,8 +23,8 @@ class CLeafBottomNav extends StatelessWidget {
       unselectedLabelStyle: GoogleFonts.inriaSerif(fontSize: 12),
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: 'Add'),
-        BottomNavigationBarItem(icon: Icon(Icons.schedule), label: 'Schedule'),
+        BottomNavigationBarItem(icon: Icon(Icons.local_library), label: 'Catalog'),
+        BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Schedule'),
         BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Library'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
