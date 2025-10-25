@@ -37,19 +37,21 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Send image file to backend
       final result = await PlantRecognizer.recognizePlantFromFile(
         _selectedImage!,
       );
       print("Raw Roboflow Result: $result");
 
-      // Since Roboflow returns a List
-      final firstResult = result[0];
+      final outputs = result["outputs"] as List?;
+      if (outputs == null || outputs.isEmpty)
+        throw Exception("No outputs from Roboflow");
 
-      // Extract base64 visualization (if available)
+      final firstOutput = outputs[0];
+
+      // Base64 visualization
       String? base64Vis;
       try {
-        final outputImage = firstResult["output_image"];
+        final outputImage = firstOutput["output_image"];
         if (outputImage != null && outputImage["type"] == "base64") {
           base64Vis = outputImage["value"] as String?;
         }
@@ -57,13 +59,17 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
         base64Vis = null;
       }
 
-      // Extract predictions (if available)
+      // Safely extract predictions with proper type cast
+      final predictionsData = firstOutput["predictions"];
       final predictionsList =
-          (firstResult["predictions"]?["predictions"] as List?)
-              ?.map((p) => {"class": p["class"], "confidence": p["confidence"]})
-              .toList()
-              .cast<Map<String, dynamic>>() ??
-          [];
+          (predictionsData != null && predictionsData["predictions"] != null)
+          ? (predictionsData["predictions"] as List)
+                .map(
+                  (p) => {"class": p["class"], "confidence": p["confidence"]},
+                )
+                .toList()
+                .cast<Map<String, dynamic>>() // ✅ cast here
+          : <Map<String, dynamic>>[];
 
       setState(() {
         _base64Image = base64Vis;
