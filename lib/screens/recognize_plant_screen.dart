@@ -37,13 +37,19 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await PlantRecognizer.recognizePlantFromFile(_selectedImage!);
+      // Send image file to backend
+      final result = await PlantRecognizer.recognizePlantFromFile(
+        _selectedImage!,
+      );
       print("Raw Roboflow Result: $result");
+
+      // Since Roboflow returns a List
+      final firstResult = result[0];
 
       // Extract base64 visualization (if available)
       String? base64Vis;
       try {
-        final outputImage = result["output_image"];
+        final outputImage = firstResult["output_image"];
         if (outputImage != null && outputImage["type"] == "base64") {
           base64Vis = outputImage["value"] as String?;
         }
@@ -52,11 +58,9 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
       }
 
       // Extract predictions (if available)
-      final predictionsList = (result["predictions"] as List?)
-              ?.map((p) => {
-                    "class": p["class"],
-                    "confidence": p["confidence"],
-                  })
+      final predictionsList =
+          (firstResult["predictions"]?["predictions"] as List?)
+              ?.map((p) => {"class": p["class"], "confidence": p["confidence"]})
               .toList()
               .cast<Map<String, dynamic>>() ??
           [];
@@ -67,9 +71,9 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
       });
     } catch (e) {
       print('Detection error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to detect plant')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to detect plant')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -124,8 +128,10 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
                   children: [
                     const Text(
                       "Detection Visualization:",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     ClipRRect(
@@ -141,16 +147,20 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
                     const SizedBox(height: 20),
                     const Text(
                       "Detected Plants:",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                    ..._predictions.map((p) => ListTile(
-                          leading: const Icon(Icons.local_florist),
-                          title: Text(p["class"]),
-                          subtitle: Text(
-                            "Confidence: ${(p["confidence"] * 100).toStringAsFixed(1)}%",
-                          ),
-                        )),
+                    ..._predictions.map(
+                      (p) => ListTile(
+                        leading: const Icon(Icons.local_florist),
+                        title: Text(p["class"]),
+                        subtitle: Text(
+                          "Confidence: ${(p["confidence"] * 100).toStringAsFixed(1)}%",
+                        ),
+                      ),
+                    ),
                   ],
                 ),
             ],
