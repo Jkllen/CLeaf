@@ -1,4 +1,3 @@
-import 'package:cleaf/screens/add_plant_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/plant_service.dart';
 import 'package:cleaf/screens/subscreen/edit_plant_screen.dart';
@@ -6,7 +5,9 @@ import 'package:cleaf/screens/subscreen/edit_plant_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CatalogScreen extends StatefulWidget {
-  const CatalogScreen({super.key});
+  final VoidCallback? onAddPlantPressed;
+
+  const CatalogScreen({super.key, this.onAddPlantPressed});
 
   @override
   State<CatalogScreen> createState() => CatalogScreenState();
@@ -187,13 +188,8 @@ class CatalogScreenState extends State<CatalogScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddPlantScreen()),
-          );
-          _fetchUserPlants(); // Refresh after adding new plant
-        },
+        onPressed:
+            widget.onAddPlantPressed, // use callback instead of Navigator.push
         backgroundColor: Colors.greenAccent,
         child: const Icon(Icons.add),
       ),

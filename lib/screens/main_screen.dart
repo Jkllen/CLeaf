@@ -4,6 +4,7 @@ import 'package:cleaf/screens/schedule_screen.dart';
 import 'package:cleaf/screens/library_screen.dart';
 import 'package:cleaf/screens/profile_screen.dart';
 import 'package:cleaf/screens/catalog_screen.dart';
+import 'package:cleaf/screens/add_plant_screen.dart';
 import 'package:cleaf/widgets/bottom_nav.dart';
 
 class MainScreen extends StatefulWidget {
@@ -15,43 +16,64 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+
+  // Overlay screen for AddPlantScreen
+  Widget? _overlayScreen;
+
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-
-    // Initialize screens with goToCatalog callback for ScheduleScreen
     _screens = [
       const HomeScreen(),
-      const CatalogScreen(),
+      CatalogScreen(
+        onAddPlantPressed: _showAddPlantScreen, // pass callback to FAB
+      ),
       ScheduleScreen(
         goToCatalog: () => _onItemTapped(1), // Catalog tab index
       ),
       const LibraryScreen(),
       const ProfileScreen(),
     ];
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      if (args is int && args >= 0 && args < _screens.length) {
-        setState(() {
-          _selectedIndex = args;
-        });
-      }
-    });
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _overlayScreen = null; // close overlay if switching tabs
+    });
+  }
+
+  void _showAddPlantScreen() {
+    setState(() {
+      _overlayScreen = AddPlantScreen(
+        onClose: _closeOverlay,
+      );
+    });
+  }
+
+  void _closeOverlay() {
+    setState(() {
+      _overlayScreen = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: Stack(
+        children: [
+          _screens[_selectedIndex],
+          if (_overlayScreen != null)
+            Positioned.fill(
+              child: Material(
+                color: Colors.white,
+                child: SafeArea(child: _overlayScreen!),
+              ),
+            ),
+        ],
+      ),
       bottomNavigationBar: CLeafBottomNav(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
