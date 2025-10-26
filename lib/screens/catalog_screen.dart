@@ -1,6 +1,8 @@
 import 'package:cleaf/screens/add_plant_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/plant_service.dart';
+import 'package:cleaf/screens/subscreen/edit_plant_screen.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CatalogScreen extends StatefulWidget {
@@ -48,10 +50,7 @@ class CatalogScreenState extends State<CatalogScreen> {
         backgroundColor: Colors.green,
         title: const Text(
           'Plant Catalog',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         elevation: 0,
@@ -101,14 +100,18 @@ class CatalogScreenState extends State<CatalogScreen> {
           const SizedBox(height: 20),
           // 🌿 Plant List
           _isLoading
-              ? const Expanded(child: Center(child: CircularProgressIndicator()))
+              ? const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
               : Expanded(
                   child: filteredPlants.isEmpty
                       ? const Center(
                           child: Text(
                             'No plants added yet 🌱',
                             style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w500),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         )
                       : ListView.builder(
@@ -117,40 +120,64 @@ class CatalogScreenState extends State<CatalogScreen> {
                             final plant = filteredPlants[index];
                             return Card(
                               margin: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               elevation: 3,
-                              child: ListTile(
-                                leading: (plant['imageUrl'] != null && plant['imageUrl'].isNotEmpty)
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          plant['imageUrl'],
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => const Icon(
-                                            Icons.error,
-                                            color: Colors.red,
-                                            size: 40,
+                              child: InkWell(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          EditPlantScreen(plantData: plant),
+                                    ),
+                                  );
+                                  _fetchUserPlants(); // refresh when returning
+                                },
+                                child: ListTile(
+                                  leading:
+                                      (plant['imageUrl'] != null &&
+                                          plant['imageUrl'].isNotEmpty)
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
+                                          child: Image.network(
+                                            plant['imageUrl'],
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    const Icon(
+                                                      Icons.error,
+                                                      color: Colors.red,
+                                                      size: 40,
+                                                    ),
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.local_florist,
+                                          size: 40,
+                                          color: Colors.green,
                                         ),
-                                      )
-                                    : const Icon(Icons.local_florist,
-                                        size: 40, color: Colors.green),
-                                title: Text(
-                                  plant['nickname'] ?? 'Unnamed',
-                                  style: const TextStyle(
+                                  title: Text(
+                                    plant['nickname'] ?? 'Unnamed',
+                                    style: const TextStyle(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  'Species: ${plant['species'] ?? "Unknown"}\n'
-                                  'Water every ${plant['wateringFrequency'] ?? "-"} days\n'
-                                  'Fertilize every ${plant['fertilizingFrequency'] ?? "-"} days\n'
-                                  'Care Notes: ${plant['careNotes'] ?? "None"}',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'Species: ${plant['species'] ?? "Unknown"}\n'
+                                    'Water every ${plant['wateringFrequency'] ?? "-"} days\n'
+                                    'Fertilize every ${plant['fertilizingFrequency'] ?? "-"} days\n'
+                                    'Care Notes: ${plant['careNotes'] ?? "None"}',
+                                  ),
                                 ),
                               ),
                             );
@@ -163,8 +190,7 @@ class CatalogScreenState extends State<CatalogScreen> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => const AddPlantScreen()),
+            MaterialPageRoute(builder: (context) => const AddPlantScreen()),
           );
           _fetchUserPlants(); // Refresh after adding new plant
         },

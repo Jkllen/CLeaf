@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../data/plant_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/plant_service.dart';
 
 class ManualAddPlantScreen extends StatefulWidget {
   const ManualAddPlantScreen({super.key});
@@ -27,6 +28,7 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
 
   int _wateringFrequency = 7; // default days
   int _fertilizingFrequency = 30; // default days
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -93,24 +95,46 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
     }
   }
 
-  void _savePlant() {
-    PlantData.addPlant(
-      nickname: _nicknameController.text,
-      species: _speciesController.text,
-      imagePath: _selectedImage?.path,
-      wateringFrequency: _wateringFrequency,
-      fertilizingFrequency: _fertilizingFrequency,
-      lastWatered: _lastWateredController.text.isNotEmpty
-          ? DateTime.parse(_lastWateredController.text)
-          : null,
-      careNotes: _careNotesController.text,
-      notificationsEnabled: _notificationsEnabled,
-    );
+  // Save plant to backend
+  Future<void> _savePlant() async {
+    if (_nicknameController.text.isEmpty || _speciesController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please provide nickname and species')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final plantData = {
+      'nickname': _nicknameController.text,
+      'species': _speciesController.text,
+      'wateringFrequency': _wateringFrequency,
+      'fertilizingFrequency': _fertilizingFrequency,
+      'lastWatered': _lastWateredController.text.isNotEmpty ? _lastWateredController.text : null,
+      'careNotes': _careNotesController.text,
+      'notificationsEnabled': _notificationsEnabled,
+    };
+
+    final result = await PlantService.addPlant(token, plantData, imageFile: _selectedImage);
+
+    setState(() => _isSaving = false);
+
+    if (result['success'] == false || result['message'] != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Failed to add plant')),
+      );
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plant saved!')),
+      const SnackBar(content: Text('Plant added successfully!')),
     );
-    Navigator.pop(context);
+
+    Navigator.pop(context, true); // indicate a new plant was added
   }
 
   @override
@@ -148,7 +172,8 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                         _selectedImage != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image.file(_selectedImage!, width: 150, height: 150, fit: BoxFit.cover),
+                                child: Image.file(_selectedImage!,
+                                    width: 150, height: 150, fit: BoxFit.cover),
                               )
                             : const Icon(Icons.photo, size: 60, color: Colors.grey),
                         const SizedBox(height: 10),
@@ -187,7 +212,7 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                   'Snake Plant',
                   'Peace Lily',
                   'Spider Plant',
-                  'Cactus',
+                  'Money Tree',
                   'Pothos',
                 ].map((String value) {
                   return DropdownMenuItem<String>(
@@ -195,7 +220,8 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                     enabled: value != 'Select Species',
                     child: Text(
                       value,
-                      style: TextStyle(color: value == 'Select Species' ? Colors.grey : Colors.black),
+                      style: TextStyle(
+                          color: value == 'Select Species' ? Colors.grey : Colors.black),
                     ),
                   );
                 }).toList(),
@@ -220,7 +246,7 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Watering Frequency (days)
+              // Watering Frequency
               TextField(
                 readOnly: true,
                 controller: _wateringFreqController..text = '$_wateringFrequency',
@@ -243,7 +269,7 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Fertilizing Frequency (days)
+              // Fertilizing Frequency
               TextField(
                 readOnly: true,
                 controller: _fertilizingFreqController..text = '$_fertilizingFrequency',
@@ -302,9 +328,15 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: _savePlant,
+                    onPressed: _isSaving ? null : _savePlant,
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent),
-                    child: const Text('Save Plant', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Save Plant', style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ],
               ),

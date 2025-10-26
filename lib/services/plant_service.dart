@@ -29,7 +29,7 @@ class PlantService {
 
   // ======= FETCH USER PLANTS =======
   static Future<List<dynamic>> fetchUserPlants(String token) async {
-    final url = Uri.parse(baseUrl);
+    final url = Uri.parse('$baseUrl/addedPlants');
     try {
       final response = await http.get(
         url,
@@ -41,7 +41,7 @@ class PlantService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data; // backend returns array directly
+        return data['plants'] ?? [];
       } else {
         print('User plants API error: ${response.body}');
         return [];
@@ -54,9 +54,11 @@ class PlantService {
 
   // ======= ADD NEW PLANT (optional image) =======
   static Future<Map<String, dynamic>> addPlant(
-      String token, Map<String, dynamic> plantData,
-      {File? imageFile}) async {
-    final uri = Uri.parse(baseUrl);
+    String token,
+    Map<String, dynamic> plantData, {
+    File? imageFile,
+  }) async {
+    final uri = Uri.parse('$baseUrl/addedPlants');
     try {
       // Use MultipartRequest if image is provided
       if (imageFile != null) {
@@ -69,7 +71,8 @@ class PlantService {
         });
 
         // Add image file
-        final mimeType = lookupMimeType(imageFile.path)?.split('/') ?? ['image', 'jpeg'];
+        final mimeType =
+            lookupMimeType(imageFile.path)?.split('/') ?? ['image', 'jpeg'];
         final fileStream = http.ByteStream(imageFile.openRead());
         final fileLength = await imageFile.length();
         final multipartFile = http.MultipartFile(
@@ -111,6 +114,69 @@ class PlantService {
     } catch (e) {
       print('Add plant exception: $e');
       return {'success': false, 'message': 'Exception occurred'};
+    }
+  }
+
+  // ======= UPDATE PLANT INFORMATION CATALOG =======
+  static Future<bool> updatePlant(String token, String plantId, Map<String, dynamic> plantData, {File? imageFile}) async {
+    final uri = Uri.parse('$baseUrl/addedPlants/$plantId');
+    try {
+      if (imageFile != null) {
+        final request = http.MultipartRequest('PUT', uri);
+        request.headers['Authorization'] = 'Bearer $token';
+
+        plantData.forEach((key, value) {
+          if (value != null) request.fields[key] = value.toString();
+        });
+
+        // Add the image file
+        final mimeType = lookupMimeType(imageFile.path)?.split('/') ?? ['image', 'jpeg'];
+        final fileStream = http.ByteStream(imageFile.openRead());
+        final fileLength = await imageFile.length();
+        final multipartFile = http.MultipartFile(
+          'image',
+          fileStream,
+          fileLength,
+          filename: imageFile.path.split('/').last,
+          contentType: MediaType(mimeType[0], mimeType[1]),
+        );
+        request.files.add(multipartFile);
+
+        final streamed = await request.send();
+        final response = await http.Response.fromStream(streamed);
+        return response.statusCode == 200;
+      } else {
+        final response = await http.put(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(plantData),
+        );
+        return response.statusCode == 200;
+      }
+    } catch (e) {
+      print('updatePlant exception: $e');
+      return false;
+    }
+  }
+
+  // DELETE plant
+  static Future<bool> deletePlant(String token, String plantId) async {
+    final uri = Uri.parse('$baseUrl/addedPlants/$plantId');
+    try {
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('deletePlant exception: $e');
+      return false;
     }
   }
 }

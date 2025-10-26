@@ -15,18 +15,23 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    CatalogScreen(),
-    ScheduleScreen(),
-    LibraryScreen(),
-    ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize screens with goToCatalog callback for ScheduleScreen
+    _screens = [
+      const HomeScreen(),
+      const CatalogScreen(),
+      ScheduleScreen(
+        goToCatalog: () => _onItemTapped(1), // Catalog tab index
+      ),
+      const LibraryScreen(),
+      const ProfileScreen(),
+    ];
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is int && args >= 0 && args < _screens.length) {
@@ -36,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
       }
     });
   }
-  
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;

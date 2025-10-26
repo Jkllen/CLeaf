@@ -1,14 +1,18 @@
 Folder PATH listing for volume Jkllen
-Volume serial number is 0000009A 7CC4:967C
+Volume serial number is 000000E9 7CC4:967C
 C:\USERS\AUGUSTINE\DOCUMENTS\VSCODE PROJECTS\CLEAF\LIB
 ³   main.dart
 ³   
+ÃÄÄÄdata
+³       plant_data.dart
+³       
 ÃÄÄÄmodels
 ³       plant_model.dart
 ³       user_model.dart
 ³       
 ÃÄÄÄscreens
 ³   ³   add_plant_screen.dart
+³   ³   catalog_screen.dart
 ³   ³   home_screen.dart
 ³   ³   library_screen.dart
 ³   ³   main_screen.dart
@@ -17,18 +21,21 @@ C:\USERS\AUGUSTINE\DOCUMENTS\VSCODE PROJECTS\CLEAF\LIB
 ³   ³   recognize_plant_screen.dart
 ³   ³   schedule_screen.dart
 ³   ³   splash_screen.dart
-³   ³   upload_plant_screen.dart
 ³   ³   
-³   ÀÄÄÄauth
-³           forgot_password_screen.dart
-³           login_screen.dart
-³           reset_password_screen.dart
-³           signup_screen.dart
+³   ÃÄÄÄauth
+³   ³       forgot_password_screen.dart
+³   ³       login_screen.dart
+³   ³       reset_password_screen.dart
+³   ³       signup_screen.dart
+³   ³       
+³   ÀÄÄÄsubscreen
+³           plant_detail.dart
 ³           
 ÃÄÄÄservices
 ³       api_service.dart
 ³       auth_service.dart
 ³       plant_service.dart
+³       roboflow_service.dart
 ³       
 ÃÄÄÄutils
 ³       constants.dart

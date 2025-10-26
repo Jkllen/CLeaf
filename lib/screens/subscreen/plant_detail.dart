@@ -31,11 +31,13 @@ class PlantDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(name, 
+        title: Text(
+          name,
           style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          ),),
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         backgroundColor: Colors.green,
       ),
       body: Container(
@@ -48,7 +50,9 @@ class PlantDetailScreen extends StatelessWidget {
               width: double.infinity,
               height: 300,
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(30),
+                ),
                 image: DecorationImage(
                   image: NetworkImage(imageUrl),
                   fit: BoxFit.cover,
@@ -76,11 +80,18 @@ class PlantDetailScreen extends StatelessWidget {
                       // Name & Scientific Name
                       Text(
                         name,
-                        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         scientificName,
-                        style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(height: 15),
 
@@ -101,10 +112,30 @@ class PlantDetailScreen extends StatelessWidget {
                         runSpacing: 10,
                         alignment: WrapAlignment.center,
                         children: [
-                          _buildInfoCard(Icons.water_drop, 'Water', water, Colors.blueAccent),
-                          _buildInfoCard(Icons.calendar_today, 'Frequency', wateringFrequency, Colors.teal),
-                          _buildInfoCard(Icons.wb_sunny, 'Light', light, Colors.orangeAccent),
-                          _buildInfoCard(Icons.thermostat, 'Temperature', temperature, Colors.deepOrange),
+                          _buildInfoCard(
+                            Icons.water_drop,
+                            'Water',
+                            water,
+                            Colors.blueAccent,
+                          ),
+                          _buildInfoCard(
+                            Icons.calendar_today,
+                            'Frequency',
+                            wateringFrequency,
+                            Colors.teal,
+                          ),
+                          _buildInfoCard(
+                            Icons.wb_sunny,
+                            'Light',
+                            light,
+                            Colors.orangeAccent,
+                          ),
+                          _buildInfoCard(
+                            Icons.thermostat,
+                            'Temperature',
+                            temperature,
+                            Colors.deepOrange,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -127,27 +158,53 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(IconData icon, String label, String value, Color iconColor) {
+  Widget _buildInfoCard(
+    IconData icon,
+    String label,
+    String value,
+    Color iconColor,
+  ) {
     return Container(
       width: 150,
       height: 80,
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 4, offset: const Offset(2, 3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(2, 3),
+          ),
+        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 30, color: iconColor),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              Text(value, style: const TextStyle(fontSize: 12)),
-            ],
+          // Make text wrap with Expanded
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  softWrap: true,
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 12),
+                  softWrap: true,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -158,9 +215,16 @@ class PlantDetailScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 6),
-        Text(content, style: const TextStyle(fontSize: 16), textAlign: TextAlign.justify),
+        Text(
+          content,
+          style: const TextStyle(fontSize: 16),
+          textAlign: TextAlign.justify,
+        ),
       ],
     );
   }
