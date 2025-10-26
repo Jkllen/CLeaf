@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset:
-          false,
+          true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -59,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             keyboardDismissBehavior:
                 ScrollViewKeyboardDismissBehavior.onDrag,
+            physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 60),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,

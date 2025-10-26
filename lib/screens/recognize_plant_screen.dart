@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cleaf/utils/plant_recognizer.dart';
 import 'manual_add_plant_screen.dart';
-import '../utils/constants.dart';
 
 class RecognizePlantScreen extends StatefulWidget {
   const RecognizePlantScreen({super.key});
