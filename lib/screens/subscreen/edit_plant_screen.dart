@@ -527,7 +527,7 @@ class _NumberPickerDialogState extends State<NumberPickerDialog> {
             Slider(
               value: _value.toDouble(),
               min: 1,
-              max: 30,
+              max: 365,
               divisions: 29,
               label: '$_value days',
               onChanged: (v) => setState(() => _value = v.toInt()),

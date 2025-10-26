@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cleaf/utils/plant_recognizer.dart';
+import 'manual_add_plant_screen.dart';
+import '../utils/constants.dart';
 
 class RecognizePlantScreen extends StatefulWidget {
   const RecognizePlantScreen({super.key});
@@ -39,11 +41,14 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await PlantRecognizer.recognizePlantFromFile(_selectedImage!);
+      final result = await PlantRecognizer.recognizePlantFromFile(
+        _selectedImage!,
+      );
       print("Raw Roboflow Result: $result");
 
       final outputs = result["outputs"] as List?;
-      if (outputs == null || outputs.isEmpty) throw Exception("No outputs from Roboflow");
+      if (outputs == null || outputs.isEmpty)
+        throw Exception("No outputs from Roboflow");
 
       final firstOutput = outputs[0];
 
@@ -62,17 +67,17 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
       final predictionsData = firstOutput["predictions"];
       final predictionsList =
           (predictionsData != null && predictionsData["predictions"] != null)
-              ? (predictionsData["predictions"] as List)
-                  .map(
-                    (p) => {
-                      "class": p["class"],
-                      "confidence": p["confidence"],
-                      "scientificName": p["scientificName"] ?? "",
-                    },
-                  )
-                  .toList()
-                  .cast<Map<String, dynamic>>()
-              : <Map<String, dynamic>>[];
+          ? (predictionsData["predictions"] as List)
+                .map(
+                  (p) => {
+                    "class": p["class"],
+                    "confidence": p["confidence"],
+                    "scientificName": p["scientificName"] ?? "",
+                  },
+                )
+                .toList()
+                .cast<Map<String, dynamic>>()
+          : <Map<String, dynamic>>[];
 
       setState(() {
         _base64Image = base64Vis;
@@ -80,20 +85,27 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
       });
     } catch (e) {
       print('Detection error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to detect plant')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to detect plant')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   /// Helper to build camera/gallery buttons
-  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed) {
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    VoidCallback onPressed,
+  ) {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, color: Colors.black),
-      label: Text(label, style: const TextStyle(fontSize: 15, color: Colors.black)),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 15, color: Colors.black),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         elevation: 2,
@@ -123,7 +135,11 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
                 color: const Color(0xFFEEEEEE),
                 padding: const EdgeInsets.all(16),
                 child: _selectedImage != null
-                    ? Image.file(_selectedImage!, height: 300, fit: BoxFit.cover)
+                    ? Image.file(
+                        _selectedImage!,
+                        height: 300,
+                        fit: BoxFit.cover,
+                      )
                     : const Center(
                         child: Icon(Icons.image, size: 80, color: Colors.grey),
                       ),
@@ -135,8 +151,16 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildActionButton(Icons.camera_alt, "Camera", () => _pickImage(ImageSource.camera)),
-                _buildActionButton(Icons.photo_library, "Gallery", () => _pickImage(ImageSource.gallery)),
+                _buildActionButton(
+                  Icons.camera_alt,
+                  "Camera",
+                  () => _pickImage(ImageSource.camera),
+                ),
+                _buildActionButton(
+                  Icons.photo_library,
+                  "Gallery",
+                  () => _pickImage(ImageSource.gallery),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -149,13 +173,20 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
                   : const Text("Detect Plant"),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 20),
 
             // Divider
-            Container(width: double.infinity, height: 2, color: const Color(0xFFD9D9D9), margin: const EdgeInsets.symmetric(vertical: 20)),
+            Container(
+              width: double.infinity,
+              height: 2,
+              color: const Color(0xFFD9D9D9),
+              margin: const EdgeInsets.symmetric(vertical: 20),
+            ),
 
             // Detection visualization
             if (imageBytes != null)
@@ -168,44 +199,84 @@ class _RecognizePlantScreenState extends State<RecognizePlantScreen> {
                   const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(imageBytes, height: 250, fit: BoxFit.cover),
+                    child: Image.memory(
+                      imageBytes,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ],
               ),
 
-            // Predictions list
+            //Predictions list
             if (_predictions.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: _predictions.map((p) {
                   final confidence = (p["confidence"] * 100).toStringAsFixed(0);
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)],
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle, color: Colors.green, size: 26),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            p["class"],
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.green),
+                  return GestureDetector(
+                    onTap: () {
+                      final species = p["class"];
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ManualAddPlantScreen(
+                            prefilledSpecies: species,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFFB1FFC0), borderRadius: BorderRadius.circular(11)),
-                          child: Text(
-                            "$confidence% match",
-                            style: const TextStyle(fontSize: 10, color: Color(0xFF008B17), fontWeight: FontWeight.bold),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F7F7),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 26,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              p["class"],
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFB1FFC0),
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: Text(
+                              "$confidence% match",
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF008B17),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),

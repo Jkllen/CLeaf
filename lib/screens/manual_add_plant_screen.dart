@@ -3,9 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/plant_service.dart';
+import '../utils/constants.dart';
 
 class ManualAddPlantScreen extends StatefulWidget {
-  const ManualAddPlantScreen({super.key});
+  final String? prefilledSpecies;
+  final int? prefilledWateringFrequency;
+  final int? prefilledFertilizingFrequency;
+  final String? prefilledNickname;
+  final String? prefilledCareNotes;
+  final String? prefilledLastWatered;
+
+  const ManualAddPlantScreen({
+    super.key,
+    this.prefilledSpecies,
+    this.prefilledWateringFrequency,
+    this.prefilledFertilizingFrequency,
+    this.prefilledNickname,
+    this.prefilledCareNotes,
+    this.prefilledLastWatered,
+  });
 
   @override
   State<ManualAddPlantScreen> createState() => _ManualAddPlantScreenState();
@@ -18,7 +34,8 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _speciesController = TextEditingController();
   final TextEditingController _wateringFreqController = TextEditingController();
-  final TextEditingController _fertilizingFreqController = TextEditingController();
+  final TextEditingController _fertilizingFreqController =
+      TextEditingController();
   final TextEditingController _lastWateredController = TextEditingController();
   final TextEditingController _careNotesController = TextEditingController();
 
@@ -30,6 +47,61 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
   int _fertilizingFrequency = 30; // default days
   bool _isSaving = false;
 
+  // Species Dropdown
+  final Map<String, String> aiToDropdownSpecies = {
+    'aloe_vera': 'Aloe Vera',
+    'snake_plant': 'Snake Plant',
+    'peace_lily': 'Peace Lily',
+    'spider_plant': 'Spider Plant',
+    'money_tree': 'Money Tree',
+    'pothos': 'Pothos',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Prefill species from AI if provided
+    if (widget.prefilledSpecies != null) {
+      _selectedSpecies =
+          aiToDropdownSpecies[widget.prefilledSpecies!] ?? 'Select Species';
+      _speciesController.text = _selectedSpecies!;
+
+      // Use the species to fetch recommended watering/fertilizing if not provided
+      final recommendation = plantCareRecommendations[_selectedSpecies!];
+      if (widget.prefilledWateringFrequency == null && recommendation != null) {
+        _wateringFrequency = recommendation['watering']!;
+        _wateringFreqController.text = '$_wateringFrequency';
+      }
+      if (widget.prefilledFertilizingFrequency == null && recommendation != null) {
+        _fertilizingFrequency = recommendation['fertilizing']!;
+        _fertilizingFreqController.text = '$_fertilizingFrequency';
+      }
+    }
+
+    // If AI didn’t provide a species, fallback to explicitly passed values
+    if (widget.prefilledWateringFrequency != null) {
+      _wateringFrequency = widget.prefilledWateringFrequency!;
+      _wateringFreqController.text = '$_wateringFrequency';
+    }
+
+    if (widget.prefilledFertilizingFrequency != null) {
+      _fertilizingFrequency = widget.prefilledFertilizingFrequency!;
+      _fertilizingFreqController.text = '$_fertilizingFrequency';
+    }
+
+    if (widget.prefilledNickname != null) {
+      _nicknameController.text = widget.prefilledNickname!;
+    }
+
+    if (widget.prefilledCareNotes != null) {
+      _careNotesController.text = widget.prefilledCareNotes!;
+    }
+
+    if (widget.prefilledLastWatered != null) {
+      _lastWateredController.text = widget.prefilledLastWatered!;
+    }
+  }
   @override
   void dispose() {
     _scrollbar.dispose();
@@ -55,7 +127,9 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                 leading: const Icon(Icons.photo_library, color: Colors.green),
                 title: const Text('Choose from Gallery'),
                 onTap: () async {
-                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                  final pickedFile = await picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
                   if (pickedFile != null) {
                     setState(() => _selectedImage = File(pickedFile.path));
                   }
@@ -66,7 +140,9 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                 leading: const Icon(Icons.camera_alt, color: Colors.blue),
                 title: const Text('Take a Photo'),
                 onTap: () async {
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                  final pickedFile = await picker.pickImage(
+                    source: ImageSource.camera,
+                  );
                   if (pickedFile != null) {
                     setState(() => _selectedImage = File(pickedFile.path));
                   }
@@ -114,12 +190,18 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
       'species': _speciesController.text,
       'wateringFrequency': _wateringFrequency,
       'fertilizingFrequency': _fertilizingFrequency,
-      'lastWatered': _lastWateredController.text.isNotEmpty ? _lastWateredController.text : null,
+      'lastWatered': _lastWateredController.text.isNotEmpty
+          ? _lastWateredController.text
+          : null,
       'careNotes': _careNotesController.text,
       'notificationsEnabled': _notificationsEnabled,
     };
 
-    final result = await PlantService.addPlant(token, plantData, imageFile: _selectedImage);
+    final result = await PlantService.addPlant(
+      token,
+      plantData,
+      imageFile: _selectedImage,
+    );
 
     setState(() => _isSaving = false);
 
@@ -130,9 +212,9 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plant added successfully!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Plant added successfully!')));
 
     Navigator.pop(context, true); // indicate a new plant was added
   }
@@ -144,7 +226,11 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
         backgroundColor: Colors.green,
         title: const Text(
           'Add New Plant',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 30,
+          ),
         ),
         centerTitle: true,
       ),
@@ -172,14 +258,27 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                         _selectedImage != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image.file(_selectedImage!,
-                                    width: 150, height: 150, fit: BoxFit.cover),
+                                child: Image.file(
+                                  _selectedImage!,
+                                  width: 150,
+                                  height: 150,
+                                  fit: BoxFit.cover,
+                                ),
                               )
-                            : const Icon(Icons.photo, size: 60, color: Colors.grey),
+                            : const Icon(
+                                Icons.photo,
+                                size: 60,
+                                color: Colors.grey,
+                              ),
                         const SizedBox(height: 10),
                         Text(
-                          _selectedImage != null ? "Tap to change photo" : "Tap to add plant photo",
-                          style: const TextStyle(color: Colors.grey, fontSize: 18),
+                          _selectedImage != null
+                              ? "Tap to change photo"
+                              : "Tap to add plant photo",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 18,
+                          ),
                         ),
                       ],
                     ),
@@ -193,7 +292,11 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                 controller: _nicknameController,
                 decoration: const InputDecoration(
                   labelText: 'Plant Nickname',
-                  prefixIcon: Icon(Icons.local_florist, color: Colors.yellow, size: 30),
+                  prefixIcon: Icon(
+                    Icons.local_florist,
+                    color: Colors.yellow,
+                    size: 30,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -205,23 +308,21 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                   prefixIcon: Icon(Icons.grass, color: Colors.green, size: 30),
                   border: OutlineInputBorder(),
                 ),
+                // Ensure the selected species exists in dropdown items, else default
                 value: _selectedSpecies,
-                items: <String>[
-                  'Select Species',
-                  'Aloe Vera',
-                  'Snake Plant',
-                  'Peace Lily',
-                  'Spider Plant',
-                  'Money Tree',
-                  'Pothos',
-                ].map((String value) {
+                items: ['Select Species', ...aiToDropdownSpecies.values].map((
+                  value,
+                ) {
                   return DropdownMenuItem<String>(
                     value: value,
                     enabled: value != 'Select Species',
                     child: Text(
                       value,
                       style: TextStyle(
-                          color: value == 'Select Species' ? Colors.grey : Colors.black),
+                        color: value == 'Select Species'
+                            ? Colors.grey
+                            : Colors.black,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -241,7 +342,11 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                 onTap: _pickLastWateredDate,
                 decoration: const InputDecoration(
                   labelText: 'Last Watered',
-                  prefixIcon: Icon(Icons.calendar_today, color: Colors.blue, size: 30),
+                  prefixIcon: Icon(
+                    Icons.calendar_today,
+                    color: Colors.blue,
+                    size: 30,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -249,10 +354,15 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
               // Watering Frequency
               TextField(
                 readOnly: true,
-                controller: _wateringFreqController..text = '$_wateringFrequency',
+                controller: _wateringFreqController
+                  ..text = '$_wateringFrequency',
                 decoration: const InputDecoration(
                   labelText: 'Watering Frequency (days)',
-                  prefixIcon: Icon(Icons.water_drop, color: Colors.blueAccent, size: 30),
+                  prefixIcon: Icon(
+                    Icons.water_drop,
+                    color: Colors.blueAccent,
+                    size: 30,
+                  ),
                 ),
                 onTap: () async {
                   final value = await showDialog<int>(
@@ -272,10 +382,15 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
               // Fertilizing Frequency
               TextField(
                 readOnly: true,
-                controller: _fertilizingFreqController..text = '$_fertilizingFrequency',
+                controller: _fertilizingFreqController
+                  ..text = '$_fertilizingFrequency',
                 decoration: const InputDecoration(
                   labelText: 'Fertilizing Frequency (days)',
-                  prefixIcon: Icon(Icons.local_dining, color: Colors.orange, size: 30),
+                  prefixIcon: Icon(
+                    Icons.local_dining,
+                    color: Colors.orange,
+                    size: 30,
+                  ),
                 ),
                 onTap: () async {
                   final value = await showDialog<int>(
@@ -306,13 +421,21 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
               // Notifications
               Row(
                 children: [
-                  const Icon(Icons.notifications, color: Colors.purple, size: 30),
+                  const Icon(
+                    Icons.notifications,
+                    color: Colors.purple,
+                    size: 30,
+                  ),
                   const SizedBox(width: 10),
-                  const Text('Enable Notifications', style: TextStyle(fontSize: 18)),
+                  const Text(
+                    'Enable Notifications',
+                    style: TextStyle(fontSize: 18),
+                  ),
                   const Spacer(),
                   Switch(
                     value: _notificationsEnabled,
-                    onChanged: (value) => setState(() => _notificationsEnabled = value),
+                    onChanged: (value) =>
+                        setState(() => _notificationsEnabled = value),
                   ),
                 ],
               ),
@@ -324,19 +447,30 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel', style: TextStyle(fontSize: 18, color: Colors.red)),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(fontSize: 18, color: Colors.red),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _isSaving ? null : _savePlant,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.greenAccent,
+                    ),
                     child: _isSaving
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : const Text('Save Plant', style: TextStyle(fontSize: 18, color: Colors.white)),
+                        : const Text(
+                            'Save Plant',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
                   ),
                 ],
               ),
@@ -352,7 +486,11 @@ class _ManualAddPlantScreenState extends State<ManualAddPlantScreen> {
 class NumberPickerDialog extends StatefulWidget {
   final String title;
   final int initialValue;
-  const NumberPickerDialog({required this.title, required this.initialValue, super.key});
+  const NumberPickerDialog({
+    required this.title,
+    required this.initialValue,
+    super.key,
+  });
 
   @override
   State<NumberPickerDialog> createState() => _NumberPickerDialogState();
@@ -378,7 +516,7 @@ class _NumberPickerDialogState extends State<NumberPickerDialog> {
             Slider(
               value: _value.toDouble(),
               min: 1,
-              max: 30,
+              max: 365,
               divisions: 29,
               label: '$_value days',
               onChanged: (v) => setState(() => _value = v.toInt()),
@@ -388,8 +526,14 @@ class _NumberPickerDialogState extends State<NumberPickerDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () => Navigator.pop(context, _value), child: const Text('Done')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _value),
+          child: const Text('Done'),
+        ),
       ],
     );
   }
