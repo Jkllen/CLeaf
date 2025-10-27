@@ -50,6 +50,7 @@ dependencies:
   shimmer: ^3.0.0
   intl: ^0.20.2
   table_calendar: ^3.2.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -111,4 +112,3 @@ flutter_native_splash:
     image: assets/images/logo.png
     android: true
     ios: true
-   
