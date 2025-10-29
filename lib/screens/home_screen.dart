@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/home_widgets.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final VoidCallback onAddPlantPressed;
+  const HomeScreen({super.key, required this.onAddPlantPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +60,7 @@ class HomeScreen extends StatelessWidget {
 
                     // === ADD NEW PLANT BUTTON ===
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context)
-                            .pushReplacementNamed('/main', arguments: 1);
-                      },
+                      onTap: onAddPlantPressed,
                       child: Container(
                         width: double.infinity,
                         height: 56,

@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:cleaf/screens/splash_screen.dart';
 import 'package:cleaf/screens/main_screen.dart';
+import 'package:cleaf/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService.initialize();
+  
+  // Ask for permission only once
+  final prefs = await SharedPreferences.getInstance();
+  final askedPermission = prefs.getBool('askedNotificationPermission') ?? false;
+
+  if (!askedPermission) {
+    await NotificationService.requestPermission();
+    await prefs.setBool('askedNotificationPermission', true);
+  }
+  
   runApp(const MyApp());
 }
 

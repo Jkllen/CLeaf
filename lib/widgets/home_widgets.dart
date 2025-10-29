@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/plant_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cleaf/services/notification_service.dart';
 
 /// Horizontal scroll section for "Upcoming Tasks"
 class UpcomingTasksSection extends StatefulWidget {
@@ -15,6 +16,7 @@ class UpcomingTasksSection extends StatefulWidget {
 class _UpcomingTasksSectionState extends State<UpcomingTasksSection> {
   List<Map<String, dynamic>> upcomingTasks = [];
   bool isLoading = true;
+  bool _notificationsSent = false;
 
   @override
   void initState() {
@@ -32,21 +34,25 @@ class _UpcomingTasksSectionState extends State<UpcomingTasksSection> {
     final today = DateTime.now();
 
     for (var plant in plants) {
-      final lastWateredStr = plant['lastWatered'] ?? DateTime.now().toIso8601String();
+      final lastWateredStr =
+          plant['lastWatered'] ?? DateTime.now().toIso8601String();
       final lastWatered = DateTime.parse(lastWateredStr);
 
       final wateringFrequency = plant['wateringFrequency'] ?? 7;
       final fertilizingFrequency = plant['fertilizingFrequency'] ?? 30;
 
       final nextWatering = lastWatered.add(Duration(days: wateringFrequency));
-      final nextFertilizing = lastWatered.add(Duration(days: fertilizingFrequency));
+      final nextFertilizing = lastWatered.add(
+        Duration(days: fertilizingFrequency),
+      );
 
       if (nextWatering.isBefore(today.add(const Duration(days: 7)))) {
         tasks.add({
           'plant': plant['nickname'],
           'task': 'Water',
           'dueDate': nextWatering,
-          'isDueToday': nextWatering.day == today.day &&
+          'isDueToday':
+              nextWatering.day == today.day &&
               nextWatering.month == today.month &&
               nextWatering.year == today.year,
         });
@@ -57,17 +63,50 @@ class _UpcomingTasksSectionState extends State<UpcomingTasksSection> {
           'plant': plant['nickname'],
           'task': 'Fertilize',
           'dueDate': nextFertilizing,
-          'isDueToday': nextFertilizing.day == today.day &&
+          'isDueToday':
+              nextFertilizing.day == today.day &&
               nextFertilizing.month == today.month &&
               nextFertilizing.year == today.year,
         });
       }
     }
 
+    if (!_notificationsSent) {
+      await _triggerDueTodayNotifications(tasks);
+      _notificationsSent = true;
+    }
+
     setState(() {
       upcomingTasks = tasks;
       isLoading = false;
     });
+  }
+
+  // Send local notifications for “Due Today” tasks
+  Future<void> _triggerDueTodayNotifications(
+    List<Map<String, dynamic>> tasks,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayKey =
+        'notifications_sent_${DateFormat('yyyy-MM-dd').format(DateTime.now())}';
+
+    // Prevent duplicate notifications in one day
+    final alreadySent = prefs.getBool(todayKey) ?? false;
+    if (alreadySent) return;
+
+    final dueToday = tasks.where((t) => t['isDueToday'] == true).toList();
+    if (dueToday.isEmpty) return;
+
+    for (var task in dueToday) {
+      await NotificationService.showNotification(
+        title: "${task['task']} ${task['plant']}",
+        body:
+            "Your ${task['plant']} needs ${task['task'].toLowerCase()}ing today!",
+      );
+    }
+
+    // Mark notifications as sent for today
+    await prefs.setBool(todayKey, true);
   }
 
   @override
@@ -79,10 +118,7 @@ class _UpcomingTasksSectionState extends State<UpcomingTasksSection> {
     if (upcomingTasks.isEmpty) {
       return Text(
         "No upcoming tasks!",
-        style: GoogleFonts.inriaSerif(
-          fontSize: 16,
-          color: Colors.black54,
-        ),
+        style: GoogleFonts.inriaSerif(fontSize: 16, color: Colors.black54),
       );
     }
 
@@ -99,7 +135,9 @@ class _UpcomingTasksSectionState extends State<UpcomingTasksSection> {
             width: 137,
             height: 136,
             decoration: BoxDecoration(
-              color: task['isDueToday'] ? Colors.red.shade100 : const Color(0xFFFFF7E6),
+              color: task['isDueToday']
+                  ? Colors.red.shade100
+                  : const Color(0xFFFFF7E6),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -189,10 +227,7 @@ class _MyPlantsSectionState extends State<MyPlantsSection> {
     if (myPlants.isEmpty) {
       return Text(
         "You have no plants yet!",
-        style: GoogleFonts.inriaSerif(
-          fontSize: 16,
-          color: Colors.black54,
-        ),
+        style: GoogleFonts.inriaSerif(fontSize: 16, color: Colors.black54),
       );
     }
 
@@ -222,7 +257,8 @@ class _MyPlantsSectionState extends State<MyPlantsSection> {
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundImage: plant['imageUrl'] != null && plant['imageUrl'] != ''
+                backgroundImage:
+                    plant['imageUrl'] != null && plant['imageUrl'] != ''
                     ? NetworkImage(plant['imageUrl'])
                     : null,
                 child: (plant['imageUrl'] == null || plant['imageUrl'] == '')

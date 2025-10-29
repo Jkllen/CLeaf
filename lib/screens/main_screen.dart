@@ -26,7 +26,9 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _screens = [
-      const HomeScreen(),
+      HomeScreen(
+        onAddPlantPressed: _showAddPlantScreen,
+      ),
       CatalogScreen(
         onAddPlantPressed: _showAddPlantScreen, // pass callback to FAB
       ),
